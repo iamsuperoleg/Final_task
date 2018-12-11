@@ -24,7 +24,7 @@ Accept the following commandline arguments:
 
 See an example of such a summary below:
 
-![Screenshot](example_summary.JPG)
+![Screenshot](example_summary.jpg)
 
 Though the data can be submitted through commandline arguments, the script must provide additional interactive input.
 
@@ -52,10 +52,4 @@ Strongly desirable for you to:
 
 9.      Create unittests for core modules/functions.
 
-Tech stack
 
-- sqlite db 
-- python 2.7 
-- pytest 
-- virtualenv
-- bash scripting
