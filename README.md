@@ -24,13 +24,7 @@ Accept the following commandline arguments:
 
 See an example of such a summary below:
 
-Seller name |  Number of sales |  Total Value ($)
-
-John        |  13              |  340
-
-Mary        |  3               |  124
-
-Total:      |  16              |  464
+https://github.com/iamsuperoleg/Final_task/blob/master/example_summary.JPG
 
 Though the data can be submitted through commandline arguments, the script must provide additional interactive input.
 
