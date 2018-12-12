@@ -1,0 +1,45 @@
+{
+  "STAFF": [
+    [
+      "KIRKOROV",
+      "MANAGER"
+    ],
+    [
+      "PUGACHEVA",
+      "SALESMAN"
+    ],
+    [
+      "GALKIN",
+      "SALESMAN"
+    ]
+  ],
+  "COFFEE_PRICE": [
+    [
+      "CAPPUCCINO",
+      "5"
+    ],
+    [
+      "LATTE",
+      "6"
+    ],
+    [
+      "ESPRESSO",
+      "4"
+    ]
+
+  ],
+    "ADDITIVE_PRICE": [
+    [
+      "CINNAMON",
+      "1.1"
+    ],
+    [
+      "SUGAR",
+      "0.11"
+    ],
+    [
+      "MILK",
+      "0.99"
+    ]
+  ]
+}
