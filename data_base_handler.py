@@ -73,6 +73,22 @@ class DataBaseHandler(object):
         for additive_price_tuple in config_object.additive_price_tuple():
             self.update_table_additive_price(additive_price_tuple)
 
+    def get_salesman_by_name(self, user_tuple):
+        name, position  = user_tuple
+        self.cur.execute('SELECT * FROM STAFF WHERE NAME = ? AND POSITION = ?', (name, position,))
+        return self.cur.fetchall()
+
+    def _user_exist(self, user_tuple):
+        return bool(self.get_salesman_by_name(user_tuple))
+
+    def add_user(self, user_tuple):
+        if self._user_exist(user_tuple):
+            print('Logging as a {} - {}'.format(user_tuple[0], user_tuple[1]))
+        else:
+            self.update_table_staff(user_tuple)
+            self.update_table_sales(user_tuple)
+            print 'User {} added as {}'.format(user_tuple[0], user_tuple[1])
+
 
 configuration = Configuration()
 coffee_for_me = DataBaseHandler()
