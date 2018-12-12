@@ -34,7 +34,7 @@ class User(object):
                 return self.get_name()
 
     def create_new_user(self):
-        user_tuple = self.name, self.position
+        user_tuple = (self.name, self.position)
         coffee_for_me.add_user(user_tuple)
 
 
