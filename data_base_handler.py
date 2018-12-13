@@ -1,31 +1,10 @@
+# -*- coding: utf-8 -*-
+
+
 import sqlite3
-import json
-
-
-class Configuration(object):
-    def __init__(self, config_file='config.json'):
-        self.config_file = config_file
-        self.config_data = None
-        self.load_data()
-
-    def load_data(self):
-        try:
-            with open(self.config_file) as file_:
-                self.config_data = json.load(file_)
-        except Exception as exc:
-            return 'loading config file {}'.format(self.config_file), exc,
-
-    def staff_tuple(self):
-        for staff in self.config_data['STAFF']:
-            yield tuple(staff)
-
-    def coffee_price_tuple(self):
-        for coffee_price in self.config_data['COFFEE_PRICE']:
-            yield tuple(coffee_price)
-
-    def additive_price_tuple(self):
-        for additive_price in self.config_data['ADDITIVE_PRICE']:
-            yield tuple(additive_price)
+from tabulate import tabulate
+from configuration import Configuration
+from beverage import Beverage
 
 
 class DataBaseHandler(object):
@@ -59,6 +38,18 @@ class DataBaseHandler(object):
             self.cur.execute("INSERT INTO SALES VALUES (?,?,?)", (name, 0, 0,))
             self.database.commit()
 
+    def rewrite_table_sales(self, name, sale_list):
+        price = self.get_overall_price(sale_list)
+        self.cur.execute('SELECT \"NUMBER OF SALES\", \"TOTAL VALUE\" FROM SALES WHERE NAME = ?', (name,))
+        number_of_sales, total_value = self.cur.fetchone()
+        number_of_sales += 1
+        total_value += price
+        self.cur.execute(
+            'UPDATE SALES SET \"NUMBER OF SALES\" = ?, \"TOTAL VALUE\" = ? WHERE NAME = ?', (number_of_sales,
+                                                                                             total_value,
+                                                                                             name,))
+        self.database.commit()
+
     def init_tables(self, config_object):
 
         self.create_tables()
@@ -74,7 +65,7 @@ class DataBaseHandler(object):
             self.update_table_additive_price(additive_price_tuple)
 
     def get_salesman_by_name(self, user_tuple):
-        name, position  = user_tuple
+        name, position = user_tuple
         self.cur.execute('SELECT * FROM STAFF WHERE NAME = ? AND POSITION = ?', (name, position,))
         return self.cur.fetchall()
 
@@ -88,6 +79,33 @@ class DataBaseHandler(object):
             self.update_table_staff(user_tuple)
             self.update_table_sales(user_tuple)
             print 'User {} added as {}'.format(user_tuple[0], user_tuple[1])
+
+    def menu(self):
+        self.cur.execute('SELECT ROWID,* FROM COFFEE_PRICE')
+        data = self.cur.fetchall()
+        return [Beverage(rowid, name, price) for rowid, name, price in data]
+
+    def view_menu(self, source=None, check_mode=False):
+        if not source:
+            source = self.menu()
+        if check_mode:
+            menu = [beverage.get_tuple_to_check() for beverage in source]
+        else:
+            menu = [beverage.get_tuple_to_menu() for beverage in source]
+        columns = ['N#', 'Beverage', 'Price']
+        return tabulate(menu, headers=columns, tablefmt="pipe", )
+
+    def return_beverage_dict(self):
+        return {str(beverage.rowid): beverage for beverage in self.menu()}
+
+    def return_statistic(self):
+        self.cur.execute('SELECT * FROM SALES')
+        columns = ['Seller name', 'Number of sales', 'Total value($)']
+        print tabulate(self.cur.fetchall(), headers=columns, tablefmt="pipe", ) + '\n'
+
+    @staticmethod
+    def get_overall_price(order):
+        return sum(beverage.price for beverage in order)
 
 
 configuration = Configuration()
