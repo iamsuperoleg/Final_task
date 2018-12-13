@@ -72,30 +72,28 @@ class Sale(User):
     def __init__(self, name, position):
         super(Sale, self).__init__(name, position)
         self.sale_list = []
-        self.beverage_options = coffee_for_me.return_beverage_dict()
+        self.coffee_options = coffee_for_me.return_coffee_dict()
+        self.addictive_options = coffee_for_me.return_additive_dict()
         self.collect_order()
 
     def collect_order(self):
-        func_option = {'SUBMIT': self.submit_order}
-        print coffee_for_me.view_menu()
+        print coffee_for_me.view_coffee_menu()
         while True:
-            choose = raw_input('\nTo submit print "SUBMIT": ').upper()
-            for choose in choose.split():
-                if choose in func_option.keys():
-                    if self.sale_list_empty_check():
-                        continue
-                    return func_option[choose]()
-                if choose in self.beverage_options.keys():
-                    beverage = self.beverage_options[choose]
-                    self.sale_list.append(beverage)
-                    print 'Adding {} by price - {}'.format(beverage.name, beverage.price)
-                else:
-                    print "Please, choose from provided option!"
-
-    def sale_list_empty_check(self):
-        if not self.sale_list:
-            print "Order list is empty!"
-            return True
+            choose = raw_input('\nSelect coffee position (or zero(0) to continue): ').upper()
+            if choose in self.coffee_options.keys():
+                coffee = self.coffee_options[choose]
+                self.sale_list.append(coffee)
+                print 'Adding {} by price - {}'.format(coffee.name, coffee.price)
+            if choose == "0":
+                print coffee_for_me.view_additive_menu()
+                while True:
+                    choose = raw_input('\nSelect coffee position (or zero(0) to continue): ').upper()
+                    if choose in self.addictive_options.keys():
+                        addictive = self.addictive_options[choose]
+                        self.sale_list.append(addictive)
+                        print 'Adding {} by price - {}'.format(addictive.name, addictive.price)
+                    else:
+                        self.submit_order()
 
     def submit_order(self):
         print 'Submitting order...'
@@ -103,9 +101,11 @@ class Sale(User):
         return self.ask_for_check(self.sale_list)
 
     def ask_for_check(self, sale_list):
-        choose = raw_input('Printing check?(Y/n): ')
+        choose = raw_input('Printing total price?(Y/n): ')
         if choose.upper() == 'Y':
-            print coffee_for_me.get_overall_price(sale_list)
+            print ("Total price is $ {}".format(coffee_for_me.get_overall_price(sale_list)))
+            return Salesman(self.name, self.position)
+        if choose.upper() == 'N':
             return Salesman(self.name, self.position)
 
 

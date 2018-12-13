@@ -4,13 +4,13 @@
 import sqlite3
 from tabulate import tabulate
 from configuration import Configuration
-from beverage import Beverage
+from getmenu import GetMenu
 
 
 class DataBaseHandler(object):
 
     def __init__(self):
-        self.database = sqlite3.connect("coffee.db")
+        self.database = sqlite3.connect(":memory:")
         self.cur = self.database.cursor()
 
     def create_tables(self):
@@ -80,23 +80,33 @@ class DataBaseHandler(object):
             self.update_table_sales(user_tuple)
             print 'User {} added as {}'.format(user_tuple[0], user_tuple[1])
 
-    def menu(self):
+    def coffee_menu(self):
         self.cur.execute('SELECT ROWID,* FROM COFFEE_PRICE')
-        data = self.cur.fetchall()
-        return [Beverage(rowid, name, price) for rowid, name, price in data]
+        coffee_data = self.cur.fetchall()
+        return [GetMenu(rowid, name, price) for rowid, name, price in coffee_data]
 
-    def view_menu(self, source=None, check_mode=False):
-        if not source:
-            source = self.menu()
-        if check_mode:
-            menu = [beverage.get_tuple_to_check() for beverage in source]
-        else:
-            menu = [beverage.get_tuple_to_menu() for beverage in source]
-        columns = ['N#', 'Beverage', 'Price']
-        return tabulate(menu, headers=columns, tablefmt="pipe", )
+    def additive_menu(self):
+        self.cur.execute('SELECT ROWID,* FROM ADDITIVE_PRICE')
+        additive_data = self.cur.fetchall()
+        return [GetMenu(rowid, name, price) for rowid, name, price in additive_data]
 
-    def return_beverage_dict(self):
-        return {str(beverage.rowid): beverage for beverage in self.menu()}
+    def view_coffee_menu(self):
+        coffee_source = self.coffee_menu()
+        coffee_menu = [beverage.get_tuple_to_menu() for beverage in coffee_source]
+        columns = ['POS', 'COFFEE', 'PRICE']
+        return tabulate(coffee_menu, headers=columns, tablefmt="pipe", )
+
+    def view_additive_menu(self):
+        additive_source = self.additive_menu()
+        additive_menu = [beverage.get_tuple_to_menu() for beverage in additive_source]
+        columns = ['POS', 'ADDITIVE', 'PRICE']
+        return tabulate(additive_menu, headers=columns, tablefmt="pipe", )
+
+    def return_coffee_dict(self):
+        return {str(beverage.rowid): beverage for beverage in self.coffee_menu()}
+
+    def return_additive_dict(self):
+        return {str(beverage.rowid): beverage for beverage in self.additive_menu()}
 
     def return_statistic(self):
         self.cur.execute('SELECT * FROM SALES')
