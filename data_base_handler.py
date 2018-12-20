@@ -2,7 +2,7 @@ import sqlite3
 import logging
 import sys
 from configuration import InfoForTables
-from get_menu import GetMenu
+from get_menu import GetProductList
 
 logger = logging.getLogger(__name__)
 logfile = "final_task_log.log"
@@ -58,7 +58,7 @@ class DataBaseHandler(object):
 
     def update_table_sales(self, user_tuple):
         name, position = user_tuple
-        if not position == 'MANAGER':
+        if not self._sales_exist(user_tuple) and position == 'SALESMAN':
             self.cur.execute("INSERT INTO SALES VALUES (?,?,?)", (name, 0, 0,))
             self.database.commit()
 
@@ -88,29 +88,37 @@ class DataBaseHandler(object):
         for additive_price_tuple in info_for_tables.additive_price_tuple():
             self.update_table_additive_price(additive_price_tuple)
 
-    def get_staff_by_name(self, user_tuple):
+    def check_table_staff(self, user_tuple):
         name, position = user_tuple
         self.cur.execute('SELECT * FROM STAFF WHERE NAME = ? AND POSITION = ?', (name, position,))
         return self.cur.fetchall()
 
-    def get_coffee_by_name(self, coffee_price):
+    def check_table_coffee(self, coffee_price):
         coffee, price = coffee_price
         self.cur.execute('SELECT * FROM COFFEE_PRICE WHERE COFFEE = ? AND PRICE = ?', (coffee, price,))
         return self.cur.fetchall()
 
-    def get_additive_by_name(self, additive_price):
+    def check_table_additive(self, additive_price):
         additive, price = additive_price
         self.cur.execute('SELECT * FROM ADDITIVE_PRICE WHERE ADDITIVE = ? AND PRICE = ?', (additive, price,))
         return self.cur.fetchall()
 
+    def check_table_sales(self, user_tuple):
+        name, position = user_tuple
+        self.cur.execute('SELECT * FROM SALES WHERE NAME = ?', (name,))
+        return self.cur.fetchall()
+
     def _user_exist(self, user_tuple):
-        return bool(self.get_staff_by_name(user_tuple))
+        return bool(self.check_table_staff(user_tuple))
 
     def _coffee_exist(self, coffee_price):
-        return bool(self.get_coffee_by_name(coffee_price))
+        return bool(self.check_table_coffee(coffee_price))
 
     def _additive_exist(self, additive_price):
-        return bool(self.get_additive_by_name(additive_price))
+        return bool(self.check_table_additive(additive_price))
+
+    def _sales_exist(self, user_tuple):
+        return bool(self.check_table_sales(user_tuple))
 
     def add_user(self, user_tuple):
         if self._user_exist(user_tuple):
@@ -120,33 +128,33 @@ class DataBaseHandler(object):
             self.update_table_sales(user_tuple)
             print 'User {} added as {}'.format(user_tuple[0], user_tuple[1])
 
-    def coffee_menu(self):
+    def coffee_list(self):
         self.cur.execute('SELECT ROWID,* FROM COFFEE_PRICE')
         coffee_data = self.cur.fetchall()
-        return [GetMenu(rowid, name, price) for rowid, name, price in coffee_data]
+        return [GetProductList(rowid, name, price) for rowid, name, price in coffee_data]
 
-    def additive_menu(self):
+    def additive_list(self):
         self.cur.execute('SELECT ROWID,* FROM ADDITIVE_PRICE')
         additive_data = self.cur.fetchall()
-        return [GetMenu(rowid, name, price) for rowid, name, price in additive_data]
+        return [GetProductList(rowid, name, price) for rowid, name, price in additive_data]
 
-    def view_coffee_menu(self):
-        coffee_source = self.coffee_menu()
-        coffee_menu = [beverage.get_tuple_to_menu() for beverage in coffee_source]
+    def view_coffee_list(self):
+        coffee_source = self.coffee_list()
+        coffee_menu = [beverage.get_tuple_to_product() for beverage in coffee_source]
         columns = ['POS', 'COFFEE', 'PRICE']
         return tabulate(coffee_menu, headers=columns, tablefmt="pipe", )
 
-    def view_additive_menu(self):
-        additive_source = self.additive_menu()
-        additive_menu = [beverage.get_tuple_to_menu() for beverage in additive_source]
+    def view_additive_list(self):
+        additive_source = self.additive_list()
+        additive_menu = [beverage.get_tuple_to_product() for beverage in additive_source]
         columns = ['POS', 'ADDITIVE', 'PRICE']
         return tabulate(additive_menu, headers=columns, tablefmt="pipe", )
 
     def return_coffee_dict(self):
-        return {str(beverage.rowid): beverage for beverage in self.coffee_menu()}
+        return {str(beverage.rowid): beverage for beverage in self.coffee_list()}
 
     def return_additive_dict(self):
-        return {str(beverage.rowid): beverage for beverage in self.additive_menu()}
+        return {str(beverage.rowid): beverage for beverage in self.additive_list()}
 
     def return_statistic(self):
         self.cur.execute('SELECT * FROM SALES')

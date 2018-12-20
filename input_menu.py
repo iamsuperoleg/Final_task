@@ -7,7 +7,7 @@ except NameError:
     new_input = input
 
 
-class User(object):
+class InputNameAndPosition(object):
 
     def __init__(self, name=None, position=None):
         self.name = name
@@ -45,53 +45,53 @@ class User(object):
 
     def chose_behavior(self):
         if self.position == 'MANAGER':
-            return Manager(name=self.name, position=self.position)
+            return InputMenuForManager(name=self.name, position=self.position)
         else:
-            return Salesman(name=self.name, position=self.position)
+            return InputMenuForSalesman(name=self.name, position=self.position)
 
 
-class Salesman(User):
+class InputMenuForSalesman(InputNameAndPosition):
     def __init__(self, name, position):
-        super(Salesman, self).__init__(name, position)
-        self.salesman_main()
+        super(InputMenuForSalesman, self).__init__(name, position)
+        self.menu_for_salesman()
 
-    def salesman_main(self):
+    def menu_for_salesman(self):
         salesman_choose = new_input(('Ok, {}!'
                                      '\n1 - GET ORDER'
                                      '\n2 - LOGOUT'
                                      '\nchose action: ').format(self.name)).upper()
         if salesman_choose in ('1', 'GET ORDER'):
-            return Sale(self.name, self.position)
+            return SalesMenu(self.name, self.position)
         if salesman_choose in ('2', 'LOGOUT'):
             print 'Logging off...'
-            return User()
+            return InputNameAndPosition()
         else:
             print 'Wrong choice!'
-            return self.salesman_main()
+            return self.menu_for_salesman()
 
 
-class Sale(User):
+class SalesMenu(InputNameAndPosition):
     def __init__(self, name, position):
-        super(Sale, self).__init__(name, position)
+        super(SalesMenu, self).__init__(name, position)
         self.sale_list = []
-        self.coffee_options = data_base_handler.return_coffee_dict()
-        self.addictive_options = data_base_handler.return_additive_dict()
-        self.collect_order()
+        self.coffee_dict = data_base_handler.return_coffee_dict()
+        self.addictive_dict = data_base_handler.return_additive_dict()
+        self.order_request()
 
-    def collect_order(self):
-        print data_base_handler.view_coffee_menu()
+    def order_request(self):
+        print data_base_handler.view_coffee_list()
         while True:
             choose = new_input('\nSelect coffee position (or zero(0) to continue): ').upper()
-            if choose in self.coffee_options.keys():
-                coffee = self.coffee_options[choose]
+            if choose in self.coffee_dict.keys():
+                coffee = self.coffee_dict[choose]
                 self.sale_list.append(coffee)
                 print 'Adding {} by price - {}'.format(coffee.name, coffee.price)
             if choose == "0":
-                print data_base_handler.view_additive_menu()
+                print data_base_handler.view_additive_list()
                 while True:
                     choose = new_input('\nSelect coffee position (or zero(0) to continue): ').upper()
-                    if choose in self.addictive_options.keys():
-                        addictive = self.addictive_options[choose]
+                    if choose in self.addictive_dict.keys():
+                        addictive = self.addictive_dict[choose]
                         self.sale_list.append(addictive)
                         print 'Adding {} by price - {}'.format(addictive.name, addictive.price)
                     else:
@@ -100,33 +100,33 @@ class Sale(User):
     def submit_order(self):
         print 'Submitting order...'
         data_base_handler.rewrite_table_sales(self.name, self.sale_list)
-        return self.ask_for_check(self.sale_list)
+        return self.total_price_request(self.sale_list)
 
-    def ask_for_check(self, sale_list):
+    def total_price_request(self, sale_list):
         choose = new_input('Printing total price?(Y/n): ')
         if choose.upper() == 'Y':
             print ("Total price is $ {}".format(data_base_handler.get_overall_price(sale_list)))
-            return Salesman(self.name, self.position)
+            return InputMenuForSalesman(self.name, self.position)
         if choose.upper() == 'N':
-            return Salesman(self.name, self.position)
+            return InputMenuForSalesman(self.name, self.position)
 
 
-class Manager(User):
+class InputMenuForManager(InputNameAndPosition):
     def __init__(self, name, position):
-        super(Manager, self).__init__(name, position)
-        self.manager_main()
+        super(InputMenuForManager, self).__init__(name, position)
+        self.menu_for_manager()
 
-    def manager_main(self):
+    def menu_for_manager(self):
         manager_choose = new_input(('Ok, {}!'
                                     '\n1 - GET OVERALL STATISTIC'
                                     '\n2 - LOGOUT'
                                     '\nchose action: ').format(self.name)).upper()
         if manager_choose in ('1', 'GET OVERALL STATISTIC'):
             data_base_handler.return_statistic()
-            return self.manager_main()
+            return self.menu_for_manager()
         if manager_choose in ('2', 'LOGOUT'):
             print 'Logging off...'
-            return User()
+            return InputNameAndPosition()
         else:
             print 'Wrong choice!'
-            return self.manager_main()
+            return self.menu_for_manager()

@@ -1,4 +1,4 @@
-from data_input import User
+from input_menu import InputNameAndPosition
 
 if __name__ == '__main__':
-    User()
+    InputNameAndPosition()
