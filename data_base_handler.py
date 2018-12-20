@@ -1,7 +1,31 @@
 import sqlite3
-from tabulate import tabulate
+import logging
+import sys
 from configuration import InfoForTables
 from get_menu import GetMenu
+
+logger = logging.getLogger(__name__)
+logfile = "final_task_log.log"
+
+formatter = logging.Formatter('%(asctime)s - %(name)s:  %(levelname)s - %(message)s')
+screen_handler = logging.StreamHandler(sys.stdout)
+screen_handler.setLevel(logging.ERROR)
+screen_handler.setFormatter(formatter)
+
+file_handler = logging.FileHandler(logfile)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(screen_handler)
+logger.addHandler(file_handler)
+logger.setLevel(logging.DEBUG)
+
+try:
+    from tabulate import tabulate
+except ImportError:
+    logger.error(
+        "Module {} needs package 'tabulate' instaled\n Try 'python -m pip install tabulate'".format(__name__))
+    quit()
 
 
 class DataBaseHandler(object):
@@ -15,19 +39,22 @@ class DataBaseHandler(object):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS COFFEE_PRICE (COFFEE TEXT, PRICE INTEGER FLOAT)""")
         self.cur.execute("""CREATE TABLE IF NOT EXISTS ADDITIVE_PRICE (ADDITIVE TEXT, PRICE INTEGER FLOAT)""")
         self.cur.execute(
-            '''CREATE TABLE  IF NOT EXISTS SALES(NAME TEXT, \"NUMBER OF SALES\" INTEGER FLOAT, \"TOTAL VALUE\" REAL)''')
+            '''CREATE TABLE  IF NOT EXISTS SALES (NAME TEXT, \"NUMBER OF SALES\" INTEGER FLOAT, \"TOTAL VALUE\" REAL)''')
 
     def update_table_staff(self, user_tuple):
-        self.cur.execute("INSERT INTO STAFF VALUES (?,?)", user_tuple)
-        self.database.commit()
+        if not self._user_exist(user_tuple):
+            self.cur.execute("INSERT INTO STAFF VALUES (?,?)", user_tuple)
+            self.database.commit()
 
     def update_table_coffee_price(self, coffee_price):
-        self.cur.execute("INSERT INTO COFFEE_PRICE VALUES (?,?)", coffee_price)
-        self.database.commit()
+        if not self._coffee_exist(coffee_price):
+            self.cur.execute("INSERT INTO COFFEE_PRICE VALUES (?,?)", coffee_price)
+            self.database.commit()
 
     def update_table_additive_price(self, additive_price):
-        self.cur.execute("INSERT INTO ADDITIVE_PRICE VALUES (?,?)", additive_price)
-        self.database.commit()
+        if not self._additive_exist(additive_price):
+            self.cur.execute("INSERT INTO ADDITIVE_PRICE VALUES (?,?)", additive_price)
+            self.database.commit()
 
     def update_table_sales(self, user_tuple):
         name, position = user_tuple
@@ -61,13 +88,29 @@ class DataBaseHandler(object):
         for additive_price_tuple in info_for_tables.additive_price_tuple():
             self.update_table_additive_price(additive_price_tuple)
 
-    def get_salesman_by_name(self, user_tuple):
+    def get_staff_by_name(self, user_tuple):
         name, position = user_tuple
         self.cur.execute('SELECT * FROM STAFF WHERE NAME = ? AND POSITION = ?', (name, position,))
         return self.cur.fetchall()
 
+    def get_coffee_by_name(self, coffee_price):
+        coffee, price = coffee_price
+        self.cur.execute('SELECT * FROM COFFEE_PRICE WHERE COFFEE = ? AND PRICE = ?', (coffee, price,))
+        return self.cur.fetchall()
+
+    def get_additive_by_name(self, additive_price):
+        additive, price = additive_price
+        self.cur.execute('SELECT * FROM ADDITIVE_PRICE WHERE ADDITIVE = ? AND PRICE = ?', (additive, price,))
+        return self.cur.fetchall()
+
     def _user_exist(self, user_tuple):
-        return bool(self.get_salesman_by_name(user_tuple))
+        return bool(self.get_staff_by_name(user_tuple))
+
+    def _coffee_exist(self, coffee_price):
+        return bool(self.get_coffee_by_name(coffee_price))
+
+    def _additive_exist(self, additive_price):
+        return bool(self.get_additive_by_name(additive_price))
 
     def add_user(self, user_tuple):
         if self._user_exist(user_tuple):
