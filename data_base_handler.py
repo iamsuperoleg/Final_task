@@ -23,56 +23,87 @@ logger.setLevel(logging.DEBUG)
 try:
     from tabulate import tabulate
 except ImportError:
-    logger.error(
-        "Module {} needs package 'tabulate' instaled\n Try 'python -m pip install tabulate'".format(__name__))
+    logger.error("Must be installed module {}"
+                 "\n Try 'python -m pip install tabulate'".format(__name__))
     quit()
 
 
 class DataBaseHandler(object):
 
-    def __init__(self):
-        self.database = sqlite3.connect("db.db")
-        self.cur = self.database.cursor()
+    def __init__(self, db_name="coffee_for_me.db"):
+        try:
+            self.db_name = db_name
+            self.database = sqlite3.connect(db_name)
+            self.cur = self.database.cursor()
+        except Exception as exc:
+            logger.error("During connecting to database:{}"
+                         "\n ERROR:{}".format(self.db_name, exc))
+            quit()
 
     def create_tables(self):
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS STAFF (NAME TEXT, POSITION TEXT)""")
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS COFFEE_PRICE (COFFEE TEXT, PRICE INTEGER FLOAT)""")
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS ADDITIVE_PRICE (ADDITIVE TEXT, PRICE INTEGER FLOAT)""")
-        self.cur.execute(
-            '''CREATE TABLE  IF NOT EXISTS SALES (NAME TEXT, \"NUMBER OF SALES\" INTEGER FLOAT, \"TOTAL VALUE\" REAL)''')
+        try:
+            self.cur.execute("""CREATE TABLE IF NOT EXISTS STAFF (NAME TEXT, POSITION TEXT)""")
+            self.cur.execute("""CREATE TABLE IF NOT EXISTS COFFEE_PRICE (COFFEE TEXT, PRICE INTEGER FLOAT)""")
+            self.cur.execute("""CREATE TABLE IF NOT EXISTS ADDITIVE_PRICE (ADDITIVE TEXT, PRICE INTEGER FLOAT)""")
+            self.cur.execute('''CREATE TABLE  IF NOT EXISTS SALES (NAME TEXT, 
+                                                                   \"NUMBER OF SALES\" INTEGER FLOAT, 
+                                                                   \"TOTAL VALUE\" REAL)''')
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'create_tables'".format(exc))
+            quit()
 
     def update_table_staff(self, user_tuple):
-        if not self._user_exist(user_tuple):
-            self.cur.execute("INSERT INTO STAFF VALUES (?,?)", user_tuple)
-            self.database.commit()
+        try:
+            if not self._user_exist(user_tuple):
+                self.cur.execute("INSERT INTO STAFF VALUES (?,?)", user_tuple)
+                self.database.commit()
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'update_table_staff'".format(exc))
+            quit()
 
     def update_table_coffee_price(self, coffee_price):
-        if not self._coffee_exist(coffee_price):
-            self.cur.execute("INSERT INTO COFFEE_PRICE VALUES (?,?)", coffee_price)
-            self.database.commit()
+        try:
+            if not self._coffee_exist(coffee_price):
+                self.cur.execute("INSERT INTO COFFEE_PRICE VALUES (?,?)", coffee_price)
+                self.database.commit()
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'update_table_coffee_price'".format(exc))
+            quit()
 
     def update_table_additive_price(self, additive_price):
-        if not self._additive_exist(additive_price):
-            self.cur.execute("INSERT INTO ADDITIVE_PRICE VALUES (?,?)", additive_price)
-            self.database.commit()
+        try:
+            if not self._additive_exist(additive_price):
+                self.cur.execute("INSERT INTO ADDITIVE_PRICE VALUES (?,?)", additive_price)
+                self.database.commit()
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'update_table_additive_price'".format(exc))
+            quit()
 
     def update_table_sales(self, user_tuple):
-        name, position = user_tuple
-        if not self._sales_exist(user_tuple) and position == 'SALESMAN':
-            self.cur.execute("INSERT INTO SALES VALUES (?,?,?)", (name, 0, 0,))
-            self.database.commit()
+        try:
+            name, position = user_tuple
+            if not self._sales_exist(user_tuple) and position == 'SALESMAN':
+                self.cur.execute("INSERT INTO SALES VALUES (?,?,?)", (name, 0, 0,))
+                self.database.commit()
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'update_table_sales'".format(exc))
+            quit()
 
     def rewrite_table_sales(self, name, sale_list):
-        price = self.get_overall_price(sale_list)
-        self.cur.execute('SELECT \"NUMBER OF SALES\", \"TOTAL VALUE\" FROM SALES WHERE NAME = ?', (name,))
-        number_of_sales, total_value = self.cur.fetchone()
-        number_of_sales += 1
-        total_value += price
-        self.cur.execute(
-            'UPDATE SALES SET \"NUMBER OF SALES\" = ?, \"TOTAL VALUE\" = ? WHERE NAME = ?', (number_of_sales,
-                                                                                             total_value,
-                                                                                             name,))
-        self.database.commit()
+        try:
+            price = self.get_overall_price(sale_list)
+            self.cur.execute('SELECT \"NUMBER OF SALES\", \"TOTAL VALUE\" FROM SALES WHERE NAME = ?', (name,))
+            number_of_sales, total_value = self.cur.fetchone()
+            number_of_sales += 1
+            total_value += price
+            self.cur.execute(
+                'UPDATE SALES SET \"NUMBER OF SALES\" = ?, \"TOTAL VALUE\" = ? WHERE NAME = ?', (number_of_sales,
+                                                                                                 total_value,
+                                                                                                 name,))
+            self.database.commit()
+        except Exception as exc:
+            logger.error("ERROR: {} while executing the method 'rewrite_table_sales'".format(exc))
+            quit()
 
     def init_tables(self, info_for_tables):
 

@@ -8,11 +8,8 @@ class OpenJson(object):
         self.load_data()
 
     def load_data(self):
-        try:
-            with open(self.config_file) as file_:
-                self.config_data = json.load(file_)
-        except Exception as exc:
-            return 'loading config file {}'.format(self.config_file, exc)
+        with open(self.config_file) as file_:
+            self.config_data = json.load(file_)
 
 
 class InfoForTables(OpenJson):

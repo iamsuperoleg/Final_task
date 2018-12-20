@@ -1,7 +1,6 @@
 from data_base_handler import data_base_handler
 
 try:
-    pass
     new_input = raw_input
 except NameError:
     new_input = input
