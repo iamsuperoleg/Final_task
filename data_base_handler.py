@@ -1,16 +1,13 @@
-# -*- coding: utf-8 -*-
-
-
 import sqlite3
 from tabulate import tabulate
-from configuration import Configuration
-from getmenu import GetMenu
+from configuration import InfoForTables
+from get_menu import GetMenu
 
 
 class DataBaseHandler(object):
 
     def __init__(self):
-        self.database = sqlite3.connect(":memory:")
+        self.database = sqlite3.connect("db.db")
         self.cur = self.database.cursor()
 
     def create_tables(self):
@@ -50,18 +47,18 @@ class DataBaseHandler(object):
                                                                                              name,))
         self.database.commit()
 
-    def init_tables(self, config_object):
+    def init_tables(self, info_for_tables):
 
         self.create_tables()
 
-        for user_tuple in config_object.staff_tuple():
+        for user_tuple in info_for_tables.staff_tuple():
             self.update_table_staff(user_tuple)
             self.update_table_sales(user_tuple)
 
-        for coffee_price_tuple in config_object.coffee_price_tuple():
+        for coffee_price_tuple in info_for_tables.coffee_price_tuple():
             self.update_table_coffee_price(coffee_price_tuple)
 
-        for additive_price_tuple in config_object.additive_price_tuple():
+        for additive_price_tuple in info_for_tables.additive_price_tuple():
             self.update_table_additive_price(additive_price_tuple)
 
     def get_salesman_by_name(self, user_tuple):
@@ -118,6 +115,6 @@ class DataBaseHandler(object):
         return sum(beverage.price for beverage in order)
 
 
-configuration = Configuration()
-coffee_for_me = DataBaseHandler()
-coffee_for_me.init_tables(configuration)
+info_for_tables = InfoForTables()
+data_base_handler = DataBaseHandler()
+data_base_handler.init_tables(info_for_tables)

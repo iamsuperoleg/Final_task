@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
-
 import json
 
 
-class Configuration(object):
+class OpenJson(object):
     def __init__(self, config_file='config.json'):
         self.config_file = config_file
         self.config_data = None
@@ -15,7 +12,10 @@ class Configuration(object):
             with open(self.config_file) as file_:
                 self.config_data = json.load(file_)
         except Exception as exc:
-            return 'loading config file {}'.format(self.config_file), exc,
+            return 'loading config file {}'.format(self.config_file, exc)
+
+
+class InfoForTables(OpenJson):
 
     def staff_tuple(self):
         for staff in self.config_data['STAFF']:

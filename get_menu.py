@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-
-
 class GetMenu(object):
 
     def __init__(self, rowid, name, price):
