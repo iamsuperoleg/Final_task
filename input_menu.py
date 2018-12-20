@@ -11,8 +11,15 @@ class InputNameAndPosition(object):
     def __init__(self, name=None, position=None):
         self.name = name
         self.position = position
-        if not self.name:
-            self.get_name()
+
+    def entrance(self):
+        while True:
+            if not self.name:
+                self.get_name()
+            if not self.position:
+                self.get_position()
+            self.create_new_user()
+            self.choose_behavior()
 
     def get_name(self):
         if not self.name:
@@ -40,9 +47,9 @@ class InputNameAndPosition(object):
     def create_new_user(self):
         user_tuple = (self.name, self.position)
         data_base_handler.add_user(user_tuple)
-        return self.chose_behavior()
+        return self.choose_behavior()
 
-    def chose_behavior(self):
+    def choose_behavior(self):
         if self.position == 'MANAGER':
             return InputMenuForManager(name=self.name, position=self.position)
         else:
@@ -62,8 +69,10 @@ class InputMenuForSalesman(InputNameAndPosition):
         if salesman_choose in ('1', 'GET ORDER'):
             return SalesMenu(self.name, self.position)
         if salesman_choose in ('2', 'LOGOUT'):
+            self.name = None
+            self.position = None
             print 'Logging off...'
-            return InputNameAndPosition()
+            return self.entrance()
         else:
             print 'Wrong choice!'
             return self.menu_for_salesman()
@@ -124,8 +133,10 @@ class InputMenuForManager(InputNameAndPosition):
             data_base_handler.return_statistic()
             return self.menu_for_manager()
         if manager_choose in ('2', 'LOGOUT'):
+            self.name = None
+            self.position = None
             print 'Logging off...'
-            return InputNameAndPosition()
+            return self.entrance()
         else:
             print 'Wrong choice!'
             return self.menu_for_manager()
