@@ -218,10 +218,10 @@ class DataBaseHandler(object):
             quit()
 
     def return_coffee_dict(self):
-        return {str(beverage.rowid): beverage for beverage in self.coffee_list()}
+        return {str(coffee.rowid): coffee for coffee in self.coffee_list()}
 
     def return_additive_dict(self):
-        return {str(beverage.rowid): beverage for beverage in self.additive_list()}
+        return {str(additive.rowid): additive for additive in self.additive_list()}
 
     def return_statistic(self):
         with DataBaseConn(self.database) as database:
@@ -235,7 +235,7 @@ class DataBaseHandler(object):
 
     @staticmethod
     def get_overall_price(order):
-        return sum(beverage.price for beverage in order)
+        return sum(product.price for product in order)
 
 
 info_for_tables = InfoForTables()
