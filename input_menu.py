@@ -1,3 +1,4 @@
+from configured_logger import *
 from data_base_handler import data_base_handler
 
 try:
@@ -22,30 +23,28 @@ class InputNameAndPosition(object):
             self.choose_behavior()
 
     def get_name(self):
-        if not self.name:
-            self.name = new_input("Hello! "
-                                  "\nEnter your name: ").upper()
-            return self.get_position()
+        self.name = new_input("Hello! "
+                              "\nEnter your name: ").upper()
+        return self.get_position()
 
     def get_position(self):
-        if not self.position:
-            position = new_input(("Hello, {}! "
-                                  "\n1 - MANAGER "
-                                  "\n2 - SALESMAN "
-                                  "\nEnter your position: ").format(self.name)).upper()
+        position = new_input(("Hello, {}! "
+                              "\n1 - MANAGER "
+                              "\n2 - SALESMAN "
+                              "\nEnter your position: ").format(self.name)).upper()
 
-            if position == 'MANAGER' or position == '1':
-                self.position = 'MANAGER'
-                return self.create_new_user()
-            if position == 'SALESMAN' or position == '2':
-                self.position = 'SALESMAN'
-                return self.create_new_user()
-            else:
-                print 'Wrong choice!'
-                return self.get_name()
+        if position == 'MANAGER' or position == '1':
+            self.position = 'MANAGER'
+            return self.create_new_user()
+        if position == 'SALESMAN' or position == '2':
+            self.position = 'SALESMAN'
+            return self.create_new_user()
+        else:
+            print ('Wrong choice!')
+            return self.get_name()
 
     def create_new_user(self):
-        user_tuple = (self.name, self.position)
+        user_tuple = (self.name.upper(), self.position.upper())
         data_base_handler.add_user(user_tuple)
         return self.choose_behavior()
 
@@ -65,16 +64,16 @@ class InputMenuForSalesman(InputNameAndPosition):
         salesman_choose = new_input(('Ok, {}!'
                                      '\n1 - GET ORDER'
                                      '\n2 - LOGOUT'
-                                     '\nchose action: ').format(self.name)).upper()
+                                     '\nChose action: ').format(self.name)).upper()
         if salesman_choose in ('1', 'GET ORDER'):
             return SalesMenu(self.name, self.position)
         if salesman_choose in ('2', 'LOGOUT'):
             self.name = None
             self.position = None
-            print 'Logging off...'
+            print ('Logging off...')
             return self.entrance()
         else:
-            print 'Wrong choice!'
+            print ('Wrong choice!')
             return self.menu_for_salesman()
 
 
@@ -89,34 +88,39 @@ class SalesMenu(InputNameAndPosition):
     def order_request(self):
         print data_base_handler.view_coffee_list()
         while True:
-            choose = new_input('\nSelect coffee position (or zero(0) to continue): ').upper()
-            if choose in self.coffee_dict.keys():
-                coffee = self.coffee_dict[choose]
-                self.sale_list.append(coffee)
-                print 'Adding {} by price - {}'.format(coffee.name, coffee.price)
-            if choose == "0":
-                print data_base_handler.view_additive_list()
-                while True:
-                    choose = new_input('\nSelect coffee position (or zero(0) to continue): ').upper()
-                    if choose in self.addictive_dict.keys():
-                        addictive = self.addictive_dict[choose]
-                        self.sale_list.append(addictive)
-                        print 'Adding {} by price - {}'.format(addictive.name, addictive.price)
-                    else:
-                        self.submit_order()
+            try:
+                choose = new_input('\nSelect coffee position (or zero(0) to continue): ').upper()
+                if choose in self.coffee_dict.keys():
+                    coffee = self.coffee_dict[choose]
+                    self.sale_list.append(coffee)
+                    print 'Adding {} by price - {}'.format(coffee.name, coffee.price)
+                if choose == "0":
+                    print (data_base_handler.view_additive_list())
+                    while True:
+                        choose = new_input('\nSelect additive position (or zero(0) to continue): ').upper()
+                        if choose in self.addictive_dict.keys():
+                            additive = self.addictive_dict[choose]
+                            self.sale_list.append(additive)
+                            print ('Adding {} by price - {}'.format(additive.name, additive.price))
+                        if choose == "0":
+                            self.submit_order()
+            except Exception as exc:
+                logger.error("'{}' while executing the method 'order_request'".format(exc))
+                quit()
 
     def submit_order(self):
-        print 'Submitting order...'
+        print ('Submitting order...')
         data_base_handler.rewrite_table_sales(self.name, self.sale_list)
         return self.total_price_request(self.sale_list)
 
     def total_price_request(self, sale_list):
-        choose = new_input('Printing total price?(Y/n): ')
-        if choose.upper() == 'Y':
-            print ("Total price is $ {}".format(data_base_handler.get_overall_price(sale_list)))
-            return InputMenuForSalesman(self.name, self.position)
-        if choose.upper() == 'N':
-            return InputMenuForSalesman(self.name, self.position)
+        while True:
+            choose = new_input('Printing total price?(Y/n): ')
+            if choose.upper() == 'Y' or choose.upper() == '':
+                print ("Total price is $ {}".format(data_base_handler.get_overall_price(sale_list)))
+                return InputMenuForSalesman(self.name, self.position)
+            if choose.upper() == 'N':
+                return InputMenuForSalesman(self.name, self.position)
 
 
 class InputMenuForManager(InputNameAndPosition):
@@ -128,15 +132,15 @@ class InputMenuForManager(InputNameAndPosition):
         manager_choose = new_input(('Ok, {}!'
                                     '\n1 - GET OVERALL STATISTIC'
                                     '\n2 - LOGOUT'
-                                    '\nchose action: ').format(self.name)).upper()
+                                    '\nChose action: ').format(self.name)).upper()
         if manager_choose in ('1', 'GET OVERALL STATISTIC'):
             data_base_handler.return_statistic()
             return self.menu_for_manager()
         if manager_choose in ('2', 'LOGOUT'):
             self.name = None
             self.position = None
-            print 'Logging off...'
+            print ('Logging off...')
             return self.entrance()
         else:
-            print 'Wrong choice!'
+            print ('Wrong choice!')
             return self.menu_for_manager()
